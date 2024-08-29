@@ -15,12 +15,22 @@ const io = new Server({
 const streams = [];
 
 io.on("connection", (socket) => {
-  io.emit("streams", streams);
+  socket.on("join-room", (room) => {
+    socket.join(room);
 
-  socket.on("newUser", (user) => {
-    streams.push({ id: socket.id, user });
+    io.to(room).emit(
+      "streams",
+      streams.filter((stream) => stream.room === room)
+    );
 
-    io.emit("streams", streams);
+    socket.on("newUser", ({ user, room }) => {
+      streams.push({ id: socket.id, user, room });
+
+      io.to(room).emit(
+        "streams",
+        streams.filter((stream) => stream.room === room)
+      );
+    });
   });
 
   socket.on("disconnect", () => {

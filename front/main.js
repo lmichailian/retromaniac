@@ -10,7 +10,14 @@ window.app = {
 const socket = io("http://localhost:3001");
 
 window.addEventListener("newUser", (event) => {
-  socket.emit("newUser", event.detail);
+  const roomId =
+    location.search.split("roomId=")[1] ||
+    Math.random().toString(36).substr(2, 9);
+
+  socket.emit("join-room", roomId);
+  history.pushState({}, "", `/?roomId=${roomId}`);
+
+  socket.emit("newUser", { room: roomId, user: event.detail });
 });
 
 socket.on("streams", (streams) => {
