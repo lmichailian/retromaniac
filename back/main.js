@@ -12,27 +12,27 @@ const io = new Server({
   },
 });
 
-const connection = [];
+const streams = [];
 
 io.on("connection", (socket) => {
-  console.log("Client connected", socket.id);
+  io.emit("streams", streams);
 
-  connection.push(socket.id);
+  socket.on("newUser", (user) => {
+    streams.push({ id: socket.id, user });
 
-  io.emit("newUsers", {
-    current: socket.id,
-    all: connection,
+    io.emit("streams", streams);
   });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected", socket.id);
 
-    connection.splice(connection.indexOf(socket.id), 1);
+    const index = streams.findIndex((stream) => stream.id === socket.id);
 
-    io.emit("newUsers", {
-      current: socket.id,
-      all: connection,
-    });
+    if (index !== -1) {
+      streams.splice(index, 1);
+    }
+
+    io.emit("streams", streams);
   });
 });
 
